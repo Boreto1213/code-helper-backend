@@ -70,43 +70,7 @@ app = FastAPI(
     }
 )
 
-# Custom exception handlers
-@app.exception_handler(ValidationError)
-async def validation_exception_handler(request: Request, exc: ValidationError):
-    logger.error(f"Validation error: {exc}")
-    return JSONResponse(
-        status_code=422,
-        content={"detail": str(exc), "error_code": "VALIDATION_ERROR"}
-    )
 
-@app.exception_handler(IntegrityError)
-async def integrity_error_handler(request: Request, exc: IntegrityError):
-    logger.error(f"Database integrity error: {exc}")
-    if "UNIQUE constraint failed" in str(exc):
-        return JSONResponse(
-            status_code=409,
-            content={"detail": "User with this email or username already exists", "error_code": "DUPLICATE_ENTRY"}
-        )
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Database integrity error", "error_code": "DB_INTEGRITY_ERROR"}
-    )
-
-@app.exception_handler(SQLAlchemyError)
-async def sqlalchemy_error_handler(request: Request, exc: SQLAlchemyError):
-    logger.error(f"Database error: {exc}")
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Database error occurred", "error_code": "DB_ERROR"}
-    )
-
-@app.exception_handler(Exception)
-async def general_exception_handler(request: Request, exc: Exception):
-    logger.error(f"Unexpected error: {exc}")
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "An unexpected error occurred", "error_code": "INTERNAL_ERROR"}
-    )
 
 # Database connection
 @app.on_event("startup")
@@ -225,6 +189,12 @@ async def delete_user(user_id: int):
     except Exception as e:
         logger.error(f"Error deleting user: {e}")
         raise
+
+# Health check endpoint
+@app.get("/health", status_code=200)
+async def health_check():
+    """Basic health check endpoint."""
+    return {"status": "ok"}
 
 if __name__ == "__main__":
     import uvicorn
