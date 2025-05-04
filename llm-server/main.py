@@ -2,12 +2,10 @@ import os
 from fastapi import FastAPI, HTTPException, Response
 from app.models.deepseek import PromptRequest, LLMReviewData
 from app.services.deepseek import DeepSeekService
-from app.services.gemini import GeminiService
 from app.utils.general import create_pr_review_prompt
 import httpx
 import logging
 from dotenv import load_dotenv
-
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -18,12 +16,10 @@ load_dotenv()
 
 REMOTE_REPO_SERVER_URL = os.getenv("REMOTE_REPO_SERVER_URL")
 
-
 app = FastAPI(title="AI Code Review API", 
               description="API for code review using various AI models")
 
 deepseek_service = DeepSeekService()
-gemini_service = GeminiService()
 
 @app.post("/process-prompt/deepseek")
 async def process_prompt_deepseek(request: PromptRequest):
@@ -89,3 +85,6 @@ async def health_check():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=True) 
+    
+    # To start the server, run:
+    # uvicorn main:app --host 0.0.0.0 --port 8001 --reload
