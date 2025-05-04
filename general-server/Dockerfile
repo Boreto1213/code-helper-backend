@@ -44,4 +44,4 @@ USER appuser
 EXPOSE 8004
 
 # Command to run the application
-CMD ["uvicorn", "pr-listener:app", "--host", "0.0.0.0", "--port", "8004", "--workers", "4"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8003", "--workers", "4"]
