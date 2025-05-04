@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+databases
+sqlalchemy
+pydantic
+pydantic[email]
+python-dotenv
+aiosqlite
