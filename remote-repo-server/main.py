@@ -4,6 +4,8 @@ import os
 from dotenv import load_dotenv
 from app.models.github import LLMReviewData
 from app.services.github import ReviewBot
+import httpx
+from typing import Dict
 
 # Load environment variables from .env file
 load_dotenv()
@@ -33,7 +35,7 @@ async def create_review(request: LLMReviewData):
             status_code=500,
             detail=str(e)
         )
-        
+
 @app.post("/pr/changes")
 async def get_pr_changes(request: Dict) -> Dict:
     """Fetch the PR changes from GitHub API and forward to LLM service"""
@@ -132,6 +134,11 @@ async def get_pr_changes(request: Dict) -> Dict:
             status_code=500,
             detail=f"An unexpected error occurred: {str(e)}"
         )
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {"status": "healthy"}
 
 if __name__ == "__main__":
     import uvicorn
