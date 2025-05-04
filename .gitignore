@@ -26,6 +26,7 @@ env/
 ENV/
 .env
 .env.docker
+.env.local
 .venv
 env.bak/
 venv.bak/
