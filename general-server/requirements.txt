@@ -6,3 +6,6 @@ pydantic
 pydantic[email]
 python-dotenv
 aiosqlite
+pytest
+pytest-asyncio
+httpx
