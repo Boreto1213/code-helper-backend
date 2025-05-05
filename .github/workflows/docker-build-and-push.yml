@@ -27,4 +27,4 @@ jobs:
 
       - name: Push the Docker image
         run: |
-          docker push ${{ vars.DOCKER_USERNAME }}/general-server:latest
+          docker push general-server:latest
