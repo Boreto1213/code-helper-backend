@@ -3,9 +3,9 @@ import hmac
 import hashlib
 import json
 from pydantic import BaseModel
-import httpx
 import os
 from dotenv import load_dotenv
+from producer import send_message
 
 app = FastAPI()
 
@@ -20,6 +20,9 @@ REMOTE_REPO_SERVER_URL = os.getenv("REMOTE_REPO_SERVER_URL")
 
 # Your webhook secret (set this in your environment variables in production)
 WEBHOOK_SECRET = os.getenv("GITHUB_WEBHOOK_SECRET")
+
+# Kafka topic for PR changes
+PR_CHANGES_TOPIC = "pr-changes"
 
 class PullRequestPayload(BaseModel):
     action: str
@@ -84,19 +87,16 @@ async def github_webhook(request: Request):
             print(f"PR #{pr_data.number} was opened")
             print(pr_info)
             
+            
             try:
-                # Call remote-repo-server to get PR changes
-                async with httpx.AsyncClient() as client:
-                    response = await client.post(
-                        REMOTE_REPO_SERVER_URL + "/pr/changes",
-                        json={
-                            "pr_url": pr_data.pull_request.get('url', ''),
-                            "pr_info": pr_info
-                        }
-                    )
+                send_message(PR_CHANGES_TOPIC, {
+                    "pr_url": pr_data.pull_request.get('url', ''),
+                    "pr_info": pr_info
+                })
+                print(f"PR change message sent to Kafka topic: {PR_CHANGES_TOPIC}")
                 
             except Exception as e:
-                print(f"Error processing PR: {str(e)}")
+                print(f"Error sending PR change to Kafka: {str(e)}")
                 import traceback
                 print(traceback.format_exc())
 
