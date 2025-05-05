@@ -1,0 +1,56 @@
+services:
+  remote-repo-server:
+    build:
+      context: ./remote-repo-server
+      dockerfile: Dockerfile
+    ports:
+      - '8000:8000'
+    env_file: './remote-repo-server/.env.docker'
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8000/health']
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 5s
+    networks:
+      - code-helper-network
+
+  llm-server:
+    build:
+      context: ./llm-server
+      dockerfile: Dockerfile
+    ports:
+      - '8001:8001'
+    env_file: './llm-server/.env.docker'
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8001/health']
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 5s
+    networks:
+      - code-helper-network
+
+  general-server:
+    build:
+      context: ./general-server
+      dockerfile: Dockerfile
+    ports:
+      - '8003:8003'
+    env_file: './general-server/.env.docker'
+    networks:
+      - code-helper-network
+
+  webhook:
+    build:
+      context: ./webhook
+      dockerfile: Dockerfile
+    ports:
+      - '8004:8004'
+    env_file: './webhook/.env.docker'
+    networks:
+      - code-helper-network
+
+networks:
+  code-helper-network:
+    driver: bridge

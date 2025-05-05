@@ -36,7 +36,7 @@ def verify_signature(payload_body: bytes, signature_header: str) -> bool:
     # Get the signature from the header
     sha_name, signature = signature_header.split('=')
     if sha_name != 'sha256':
-        return Falsekit
+        return False
 
     # Create our own signature
     expected_signature = hmac.new(
