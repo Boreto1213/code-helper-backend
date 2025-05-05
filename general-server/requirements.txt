@@ -9,3 +9,4 @@ aiosqlite
 pytest
 pytest-asyncio
 httpx
+black
