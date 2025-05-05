@@ -19,15 +19,15 @@ jobs:
         working-directory: general-server
         run: docker build . --file Dockerfile --tag ${{ vars.DOCKER_USERNAME }}/general-server:latest
 
-        - name: Build Docker image - Remote Repo Server
+      - name: Build Docker image - Remote Repo Server
         working-directory: remote-repo-server
         run: docker build . --file Dockerfile --tag ${{ vars.DOCKER_USERNAME }}/remote-repo-server:latest
 
-        - name: Build Docker image - LLM Server
+      - name: Build Docker image - LLM Server
         working-directory: llm-server
         run: docker build . --file Dockerfile --tag ${{ vars.DOCKER_USERNAME }}/llm-server:latest
 
-        - name: Build Docker image - Webhook
+      - name: Build Docker image - Webhook
         working-directory: webhook
         run: docker build . --file Dockerfile --tag ${{ vars.DOCKER_USERNAME }}/webhook:latest
 
