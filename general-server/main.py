@@ -33,19 +33,23 @@ users = sqlalchemy.Table(
     sqlalchemy.Column("created_at", sqlalchemy.DateTime, default=datetime.utcnow),
 )
 
+
 # Pydantic models for request/response
 class UserBase(BaseModel):
     email: EmailStr
     username: str
     full_name: str
 
+
 class UserCreate(UserBase):
     pass
+
 
 class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
     username: Optional[str] = None
     full_name: Optional[str] = None
+
 
 class User(UserBase):
     id: int
@@ -54,10 +58,12 @@ class User(UserBase):
     class Config:
         orm_mode = True
 
+
 # Error response models
 class ErrorResponse(BaseModel):
     detail: str
     error_code: str
+
 
 # Create FastAPI app
 app = FastAPI(
@@ -67,17 +73,18 @@ app = FastAPI(
         404: {"model": ErrorResponse, "description": "Not Found"},
         409: {"model": ErrorResponse, "description": "Conflict"},
         500: {"model": ErrorResponse, "description": "Internal Server Error"},
-    }
+    },
 )
+
 
 # Custom exception handlers
 @app.exception_handler(ValidationError)
 async def validation_exception_handler(request: Request, exc: ValidationError):
     logger.error(f"Validation error: {exc}")
     return JSONResponse(
-        status_code=422,
-        content={"detail": str(exc), "error_code": "VALIDATION_ERROR"}
+        status_code=422, content={"detail": str(exc), "error_code": "VALIDATION_ERROR"}
     )
+
 
 @app.exception_handler(IntegrityError)
 async def integrity_error_handler(request: Request, exc: IntegrityError):
@@ -85,28 +92,40 @@ async def integrity_error_handler(request: Request, exc: IntegrityError):
     if "UNIQUE constraint failed" in str(exc):
         return JSONResponse(
             status_code=409,
-            content={"detail": "User with this email or username already exists", "error_code": "DUPLICATE_ENTRY"}
+            content={
+                "detail": "User with this email or username already exists",
+                "error_code": "DUPLICATE_ENTRY",
+            },
         )
     return JSONResponse(
         status_code=500,
-        content={"detail": "Database integrity error", "error_code": "DB_INTEGRITY_ERROR"}
+        content={
+            "detail": "Database integrity error",
+            "error_code": "DB_INTEGRITY_ERROR",
+        },
     )
+
 
 @app.exception_handler(SQLAlchemyError)
 async def sqlalchemy_error_handler(request: Request, exc: SQLAlchemyError):
     logger.error(f"Database error: {exc}")
     return JSONResponse(
         status_code=500,
-        content={"detail": "Database error occurred", "error_code": "DB_ERROR"}
+        content={"detail": "Database error occurred", "error_code": "DB_ERROR"},
     )
+
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unexpected error: {exc}")
     return JSONResponse(
         status_code=500,
-        content={"detail": "An unexpected error occurred", "error_code": "INTERNAL_ERROR"}
+        content={
+            "detail": "An unexpected error occurred",
+            "error_code": "INTERNAL_ERROR",
+        },
     )
+
 
 # Database connection
 @app.on_event("startup")
@@ -120,6 +139,7 @@ async def startup():
         logger.error(f"Failed to connect to database: {e}")
         raise
 
+
 @app.on_event("shutdown")
 async def shutdown():
     try:
@@ -128,17 +148,20 @@ async def shutdown():
     except Exception as e:
         logger.error(f"Error during database shutdown: {e}")
 
+
 # CRUD operations
-@app.post("/users/", response_model=User, responses={
-    409: {"description": "User with this email or username already exists"},
-    500: {"description": "Internal server error"}
-})
+@app.post(
+    "/users/",
+    response_model=User,
+    responses={
+        409: {"description": "User with this email or username already exists"},
+        500: {"description": "Internal server error"},
+    },
+)
 async def create_user(user: UserCreate):
     try:
         query = users.insert().values(
-            email=user.email,
-            username=user.username,
-            full_name=user.full_name
+            email=user.email, username=user.username, full_name=user.full_name
         )
         last_record_id = await database.execute(query)
         logger.info(f"User created successfully with ID: {last_record_id}")
@@ -147,9 +170,12 @@ async def create_user(user: UserCreate):
         logger.error(f"Error creating user: {e}")
         raise
 
-@app.get("/users/", response_model=List[User], responses={
-    500: {"description": "Internal server error"}
-})
+
+@app.get(
+    "/users/",
+    response_model=List[User],
+    responses={500: {"description": "Internal server error"}},
+)
 async def read_users(skip: int = 0, limit: int = 100):
     try:
         query = users.select().offset(skip).limit(limit)
@@ -158,10 +184,15 @@ async def read_users(skip: int = 0, limit: int = 100):
         logger.error(f"Error fetching users: {e}")
         raise
 
-@app.get("/users/{user_id}", response_model=User, responses={
-    404: {"description": "User not found"},
-    500: {"description": "Internal server error"}
-})
+
+@app.get(
+    "/users/{user_id}",
+    response_model=User,
+    responses={
+        404: {"description": "User not found"},
+        500: {"description": "Internal server error"},
+    },
+)
 async def read_user(user_id: int):
     try:
         query = users.select().where(users.c.id == user_id)
@@ -176,23 +207,28 @@ async def read_user(user_id: int):
         logger.error(f"Error fetching user: {e}")
         raise
 
-@app.put("/users/{user_id}", response_model=User, responses={
-    400: {"description": "No fields to update"},
-    404: {"description": "User not found"},
-    409: {"description": "User with this email or username already exists"},
-    500: {"description": "Internal server error"}
-})
+
+@app.put(
+    "/users/{user_id}",
+    response_model=User,
+    responses={
+        400: {"description": "No fields to update"},
+        404: {"description": "User not found"},
+        409: {"description": "User with this email or username already exists"},
+        500: {"description": "Internal server error"},
+    },
+)
 async def update_user(user_id: int, user: UserUpdate):
     try:
         # Check if user exists
         existing_user = await read_user(user_id)
-        
+
         query = users.update().where(users.c.id == user_id)
         values = {k: v for k, v in user.dict().items() if v is not None}
         if not values:
             logger.warning("No fields provided for update")
             raise HTTPException(status_code=400, detail="No fields to update")
-        
+
         query = query.values(**values)
         await database.execute(query)
         logger.info(f"User updated successfully with ID: {user_id}")
@@ -203,21 +239,25 @@ async def update_user(user_id: int, user: UserUpdate):
         logger.error(f"Error updating user: {e}")
         raise
 
-@app.delete("/users/{user_id}", responses={
-    404: {"description": "User not found"},
-    500: {"description": "Internal server error"}
-})
+
+@app.delete(
+    "/users/{user_id}",
+    responses={
+        404: {"description": "User not found"},
+        500: {"description": "Internal server error"},
+    },
+)
 async def delete_user(user_id: int):
     try:
         # Check if user exists
         await read_user(user_id)
-        
+
         query = users.delete().where(users.c.id == user_id)
         result = await database.execute(query)
         if not result:
             logger.warning(f"User not found for deletion with ID: {user_id}")
             raise HTTPException(status_code=404, detail="User not found")
-        
+
         logger.info(f"User deleted successfully with ID: {user_id}")
         return {"message": "User deleted successfully"}
     except HTTPException:
@@ -226,6 +266,8 @@ async def delete_user(user_id: int):
         logger.error(f"Error deleting user: {e}")
         raise
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8003)
