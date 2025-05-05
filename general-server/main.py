@@ -216,14 +216,11 @@ async def delete_user(user_id: int):
         logger.error(f"Error deleting user: {e}")
         raise
 
-<<<<<<< HEAD
 # Health check endpoint
 @app.get("/health", status_code=200)
 async def health_check():
     """Basic health check endpoint."""
     return {"status": "ok"}
-=======
->>>>>>> main
 
 if __name__ == "__main__":
     import uvicorn

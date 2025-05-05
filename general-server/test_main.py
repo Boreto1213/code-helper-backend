@@ -1,7 +1,5 @@
 import pytest
 from fastapi.testclient import TestClient
-import sys
-import os
 import databases
 import sqlalchemy
 from sqlalchemy.pool import StaticPool
